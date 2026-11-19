@@ -2,6 +2,7 @@
 
 import styled from '@emotion/styled';
 import { DOCUMENT_MAX_LENGTH } from '@/constants/form';
+import { countDocumentLength } from '@/utils/form';
 import { useFormSection } from '@/hooks/useFormSection';
 import type { FieldErrors } from '@/schemas/form';
 import color from '@/styles/color';
@@ -43,7 +44,7 @@ const DocumentStep = ({ errors }: { errors: FieldErrors }) => {
           <Footer>
             {errors[key] ? <ErrorText>{errors[key]}</ErrorText> : <span />}
             <Count>
-              {document[key].length} / {DOCUMENT_MAX_LENGTH}
+              {countDocumentLength(document[key])} / {DOCUMENT_MAX_LENGTH}
             </Count>
           </Footer>
         </FieldGroup>
