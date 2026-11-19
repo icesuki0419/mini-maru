@@ -3,6 +3,7 @@ import { SEMESTERS, SUBJECTS } from '@/constants/form';
 import type { AchievementLevel, Form, Semester, Subject } from '@/types/form';
 import { calculateTotalScore } from './grade';
 
+
 const createSubjectRecord = <T>(value: T) =>
   Object.fromEntries(SUBJECTS.map((subject) => [subject, value])) as Record<Subject, T>;
 
