@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { DOCUMENT_MAX_LENGTH, SUBJECTS } from '@/constants/form';
 import type { Form } from '@/types/form';
+import { countDocumentLength } from '@/utils/form';
 
 const message = '잘못된 입력입니다.';
 
@@ -69,9 +70,17 @@ export const gedScoreSchema = z.object(
   ),
 );
 
+const documentField = z
+  .string()
+  .refine((value) => value.trim().length > 0, message)
+  .refine(
+    (value) => countDocumentLength(value) <= DOCUMENT_MAX_LENGTH,
+    `${DOCUMENT_MAX_LENGTH}자 이하로 작성해주세요. (줄바꿈은 2자로 계산)`,
+  );
+
 export const documentSchema = z.object({
-  coverLetter: z.string().trim().min(1, message).max(DOCUMENT_MAX_LENGTH, message),
-  studyPlan: z.string().trim().min(1, message).max(DOCUMENT_MAX_LENGTH, message),
+  coverLetter: documentField,
+  studyPlan: documentField,
 });
 
 export type FieldErrors = Record<string, string>;

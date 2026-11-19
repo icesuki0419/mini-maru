@@ -3,6 +3,7 @@ import { SEMESTERS, SUBJECTS } from '@/constants/form';
 import type { AchievementLevel, Form, Semester, Subject } from '@/types/form';
 import { calculateTotalScore } from './grade';
 
+
 const createSubjectRecord = <T>(value: T) =>
   Object.fromEntries(SUBJECTS.map((subject) => [subject, value])) as Record<Subject, T>;
 
@@ -77,3 +78,4 @@ export const toSubmitRequest = (form: Form) => {
 };
 
 export type SubmitFormRequest = ReturnType<typeof toSubmitRequest>;
+export const countDocumentLength = (text: string) => text.replace(/\r?\n/g, '\r\n').length;
