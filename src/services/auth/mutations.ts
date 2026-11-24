@@ -1,7 +1,10 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSetAtom } from 'jotai';
 import { useRouter } from 'next/navigation';
+import { formAtom, formStepAtom, isFormHydratedAtom, lastSavedAtAtom } from '@/stores';
 import { token } from '@/utils/token';
 import { getErrorMessage } from '@/utils/error';
+import { createInitialForm } from '@/utils/form';
 import type { LoginRequest, SignUpRequest } from './api';
 import { deleteLogout, patchVerification, postLogin, postSignUp, postVerification } from './api';
 
@@ -20,11 +23,21 @@ export const useLoginMutation = (onError: (message: string) => void) => {
 
 export const useLogoutMutation = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const setForm = useSetAtom(formAtom);
+  const setStep = useSetAtom(formStepAtom);
+  const setIsHydrated = useSetAtom(isFormHydratedAtom);
+  const setLastSavedAt = useSetAtom(lastSavedAtAtom);
 
   return useMutation({
     mutationFn: deleteLogout,
     onSettled: () => {
       token.clear();
+      setForm(createInitialForm());
+      setStep(0);
+      setIsHydrated(false);
+      setLastSavedAt(null);
+      queryClient.clear();
       router.push('/login');
     },
   });
