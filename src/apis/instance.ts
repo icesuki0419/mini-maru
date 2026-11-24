@@ -28,25 +28,34 @@ const reissue = async () => {
   return data.accessToken;
 };
 
+let reissuePromise: Promise<string> | null = null;
+
+const reissueOnce = () => {
+  if (!reissuePromise) {
+    reissuePromise = reissue()
+      .catch((reissueError) => {
+        token.clear();
+        alert('로그인이 만료되었습니다. 다시 로그인해주세요.');
+        window.location.href = '/login';
+        throw reissueError;
+      })
+      .finally(() => {
+        reissuePromise = null;
+      });
+  }
+  return reissuePromise;
+};
+
 maru.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     const isAuthRequest = originalRequest?.url === '/auth';
 
-    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
-      originalRequest._retry = true;
-      try {
-        const accessToken = await reissue();
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return maru(originalRequest);
-      } catch (reissueError) {
-        token.clear();
-        alert('로그인이 만료되었습니다. 다시 로그인해주세요.');
-        window.location.href = '/login';
-        return Promise.reject(reissueError);
-      }
-    }
+    const accessToken = await reissueOnce();
+      originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+      return maru(originalRequest);
+  
 
     return Promise.reject(error);
   },
