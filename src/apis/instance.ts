@@ -52,10 +52,12 @@ maru.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     const isAuthRequest = originalRequest?.url === '/auth';
 
-    const accessToken = await reissueOnce();
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
+      originalRequest._retry = true;
+      const accessToken = await reissueOnce();
       originalRequest.headers.Authorization = `Bearer ${accessToken}`;
       return maru(originalRequest);
-  
+    }
 
     return Promise.reject(error);
   },
