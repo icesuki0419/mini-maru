@@ -114,3 +114,22 @@
 → 어디서 써도 똑같이 동작하는 코드는 패키지 그 앱만의 규칙이 담긴 코드는 앱에 둔다.
 
 **모르는 부분** : 실제로 정한 규칙이 문서로 있는지는 확인하지 못했다. 
+
+
+## A-7 axios baseURL이 /api인 이유
+
+### 한 줄 요약
+브라우저는 같은 주소의 `/api`로만 요청하고 Next.js가 그 요청을 실제 백엔드로 대신 전달한다. 그래서 CORS 문제가 생기지 않는다.
+
+### 근거
+- `apps/user/src/apis/instance/instance.ts` : `baseURL: '/api'`
+- `apps/user/next.config.js` : `rewrites()`가 `/api/:path*` 요청을 `${backendBaseUrl}/:path*`로 전달한다.
+- `next.config.js` : 백엔드 주소는 환경변수 `NEXT_PUBLIC_BASE_URL`에서 읽는다.
+
+### 이렇게 하는 이유
+1. 브라우저 입장에서는 같은 출처로 요청하므로 CORS 오류가 나지 않는다.
+2. 백엔드 주소가 코드에 하드코딩되지 않아서, 환경변수만 바꾸면 개발·운영 서버를 전환할 수 있다.
+3. 같은 출처라서 `withCredentials: true`에서 쿠키를 함께 보내기 쉽다.
+
+### 실습 코드와 비교
+`src/apis/instance.ts` 6번 줄도 `baseURL: '/api'`다. 실습에는 실제 백엔드가 없고, MSW가 브라우저에서 `/api` 요청을 가로채 응답한다.
