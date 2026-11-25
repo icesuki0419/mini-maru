@@ -2,6 +2,7 @@
 
 import styled from '@emotion/styled';
 import dayjs from 'dayjs';
+import 'dayjs/locale/ko';
 import Link from 'next/link';
 import Button from '@/components/common/Button';
 import PageLayout from '@/components/common/PageLayout';
@@ -19,7 +20,7 @@ const FormCompletePage = () => {
         <Title>원서 제출이 완료되었습니다</Title>
         {submittedAt && (
           <SubmittedAt>
-            제출 일시 {dayjs(submittedAt).format('YYYY년 M월 D일 (dd) A h시 mm분')}
+            제출 일시 {dayjs(submittedAt).locale('ko').format('YYYY년 M월 D일 (dd) A h시 mm분')}
           </SubmittedAt>
         )}
         <Text>1차 합격자 발표일에 결과 확인 페이지에서 결과를 확인할 수 있습니다.</Text>
