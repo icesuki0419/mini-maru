@@ -163,3 +163,12 @@ CORS 오류를 만나면 다음 순서로 확인한다.
 6. 백엔드에 허용 설정을 요청하거나, 프론트 서버의 프록시로 같은 출처에서 요청하게 바꾼다.
 
 `src/apis/instance.ts` 6번 줄은 `baseURL: '/api'`라서 모든 요청이 같은 출처로 간다. MSW가 브라우저 안에서 응답하므로 CORS 오류가 생기지 않는다. 실제 마루는 같은 `/api` 요청을 `next.config.js`의 `rewrites`가 백엔드로 전달해서 CORS를 피한다.
+
+
+## B-7 Emotion 같은 CSS-in-JS의 동작 방식과 App Router에서의 주의점
+
+Emotion은 JavaScript 안에 쓴 스타일을 화면을 그릴 때 해석해서 클래스 이름을 만들고 스타일 태그로 넣어 준다. 컴포넌트와 스타일을 한 파일에 둘 수 있고, props에 따라 스타일을 바꾸기 쉽다.
+
+App Router에서 주의할 점은 먼저 Emotion은 브라우저에서 동작하므로 서버 컴포넌트에서는 쓸 수 없고 쓰는 파일에 `'use client'`가 필요하다. 그리고 서버가 보낸 첫 화면에 스타일이 빠지면 스타일 없는 화면이 잠깐 보일 수 있어서 서버에서 만든 스타일을 HTML에 넣어 주는 설정이 필요하다.
+
+실습 코드에서 `styled`를 쓰는 `Button.tsx`, `GlobalStyle.tsx` 등에는 모두 `'use client'`가 있다. 서버 컴포넌트인 `src/app/layout.tsx`는 1번 줄 `/** @jsxImportSource react */`로 Emotion을 쓰지 않도록 했다. `next.config.mjs`의 `compiler: { emotion: true }`로 Emotion 변환을 켠다.
