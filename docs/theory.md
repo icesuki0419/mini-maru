@@ -116,3 +116,15 @@ React Query는 서버에서 받은 데이터를 캐시에 보관한다. `staleTi
 `src/app/Providers.tsx` 28번 줄에서 `staleTime`을 5분으로 정해서, 5분 안에는 같은 데이터를 다시 요청하지 않는다. `src/services/form/mutations.ts` 31번 줄은 원서 제출이 성공하면 `invalidateQueries`로 원서 상태를 다시 불러오게 한다. 제출하면 상태가 바뀌지만 프론트가 새 상태를 직접 알 수는 없기 때문이다.
 
 다만 여기서 무효화하는 queryKey는 `['form', 'status']`인데 상태를 불러오는 `src/services/form/queries.ts` 7번 줄의 queryKey는 `['formStatus']`라서 서로 맞지 않는다. queryKey를 문자열로 여러 곳에 직접 쓰면 이런 실수가 생기기 쉬우므로 queryKey를 한 파일에 모아 관리하는 것이 좋다.
+
+
+## B-3 useState, Jotai atom, React Query — 상태를 어디에 둘까
+
+먼저 원본이 서버에 있는 데이터면 React Query에 둔다. 캐시, 다시 불러오기, 로딩/에러 상태를 React Query가 관리해 준다. 그리고 서버 데이터가 아니면서 여러 컴포넌트가 함께 쓰면 Jotai atom에 둔다. 한 컴포넌트에서만 쓰면 `useState`로 충분하다.
+
+실습 코드 분류
+- React Query : 내 정보, 일정, 원서 상태, 임시저장, 학교 검색, 결과 모두 서버에 원본이 있다.
+- Jotai atom : 작성 중인 원서, 현재 단계, 불러왔는지 여부, 마지막 저장 시각 원서 단계 컴포넌트 7개와 진행 버튼이 함께 쓴다.
+- useState : 로그인 입력값, 학교 검색어와 선택, 개발 패널 열림 여부 그 컴포넌트 안에서만 쓴다.
+
+atom과 React Query 캐시는 컴포넌트가 사라져도 남는다. 그래서 사용자가 바뀌는 로그아웃 때 직접 비워야 한다. 문의 4번은 이 초기화를 빠뜨려서 이전 사용자의 원서가 보인 버그였다.
