@@ -105,3 +105,14 @@
 실습 코드에서 `src/app/layout.tsx`는 서버 컴포넌트다. 페이지 제목만 정하고 누를 것이 없기 때문이다. 원서 작성, 로그인 같은 페이지는 입력과 버튼 클릭이 있고, `localStorage`에서 토큰을 읽어야 해서 `'use client'`를 두었다. `Providers.tsx`도 `useState`로 `QueryClient`를 만들기 때문에 클라이언트다.
 
 -> 사용자가 누르거나 입력하는 것이 있으면 `'use client'`를 두고 보여주기만 하면 서버 컴포넌트로 두면 된다.
+
+
+## B-2 React Query의 staleTime, gcTime, invalidateQueries, setQueryData
+
+React Query는 서버에서 받은 데이터를 캐시에 보관한다. `staleTime` 동안은 서버에 다시 요청하지 않는다. `gcTime`은 그 데이터를 쓰는 화면이 없을 때 캐시에서 지우기까지 기다리는 시간이다.
+
+`invalidateQueries`는 데이터가 바뀌었지만 새 값을 정확히 모를 때 쓴다. 해당 데이터를 오래됨으로 표시해서 서버에 다시 요청하게 한다. `setQueryData`는 서버 응답 등으로 새 값을 이미 알고 있을 때, 다시 요청하지 않고 캐시를 직접 바꾼다.
+
+`src/app/Providers.tsx` 28번 줄에서 `staleTime`을 5분으로 정해서, 5분 안에는 같은 데이터를 다시 요청하지 않는다. `src/services/form/mutations.ts` 31번 줄은 원서 제출이 성공하면 `invalidateQueries`로 원서 상태를 다시 불러오게 한다. 제출하면 상태가 바뀌지만 프론트가 새 상태를 직접 알 수는 없기 때문이다.
+
+다만 여기서 무효화하는 queryKey는 `['form', 'status']`인데 상태를 불러오는 `src/services/form/queries.ts` 7번 줄의 queryKey는 `['formStatus']`라서 서로 맞지 않는다. queryKey를 문자열로 여러 곳에 직접 쓰면 이런 실수가 생기기 쉬우므로 queryKey를 한 파일에 모아 관리하는 것이 좋다.
