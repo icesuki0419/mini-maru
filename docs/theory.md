@@ -137,3 +137,14 @@ atom과 React Query 캐시는 컴포넌트가 사라져도 남는다. 그래서 
 `useMemo`는 의존하는 값이 바뀌지 않으면 계산 결과를 재사용하고 `useCallback`은 함수를 매번 새로 만들지 않고 같은 함수를 재사용한다. 계산이 무겁거나, `React.memo`로 감싼 자식에게 넘기는 값,함수라서 참조가 같아야 할 때, `useEffect`의 의존성으로 쓰일 때 필요하다. 반대로 가벼운 계산이나 평범한 `onClick` 함수에 쓰면 메모하는 비용만 늘어서 필요 없다.
 
 실습 코드에는 `useMemo`, `useCallback`이 쓰이지 않았다. 예를 들어 `src/components/form/GradePreview.tsx` 11번 줄은 렌더링마다 `calculateScores(form)`로 성적을 다시 계산한다. 성적 입력 중에는 입력할 때마다 `formAtom`이 바뀌어 다시 렌더링되지만 5과목 × 3학기 정도의 가벼운 계산이라 `useMemo`가 필요 없다. 게다가 의존 값인 `form`이 입력할 때마다 바뀌므로 메모해도 매번 다시 계산하게 되어 이득이 없다. 성능 문제가 실제로 보일 때 측정하고 적용하는 것이 맞다고 판단했다.
+
+
+## B-5 토큰 저장 위치와 보안 (XSS, CSRF)
+
+XSS는 공격자의 스크립트가 우리 사이트 안에서 실행되어 브라우저에 있는 정보를 훔치는 공격이다. CSRF는 다른 사이트가 사용자의 브라우저를 이용해 우리 서버로 요청을 보내는 공격으로 쿠키가 요청에 자동으로 붙는 점을 이용한다.
+
+- localStorage : JavaScript로 언제든 읽을 수 있어서 XSS에 약하다. 요청에 자동으로 붙지 않으므로 CSRF에는 안전하다.
+- 일반 쿠키 : `document.cookie`로 읽을 수 있어 XSS에 약하고 요청마다 자동으로 붙어서 CSRF에도 약하다.
+- httpOnly 쿠키 : JavaScript가 읽을 수 없어서 XSS로 토큰을 훔칠 수 없다. 자동으로 붙어서 CSRF 위험이 있으므로 `SameSite` 설정이나 CSRF 토큰으로 막아야 한다.
+
+`src/utils/token.ts` 1~16번 줄은 access token과 refresh token을 모두 localStorage에 저장한다. 실제로 개발자 도구 Application 탭에서 두 토큰이 그대로 보였고 문의 3번을 검증할 때 값을 직접 바꿔 볼 수도 있었다. 이는 XSS 스크립트도 같은 방법으로 토큰을 읽을 수 있다는 뜻이다. 특히 refresh token은 유효시간이 1일이라 탈취되면 피해가 크다. 실제 서비스라면 refresh token은 httpOnly + `SameSite` 쿠키로 서버가 관리하고 access token은 짧게 유지하며 메모리에 두는 방식이 더 안전하다고 생각한다.
