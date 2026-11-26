@@ -148,3 +148,18 @@ XSS는 공격자의 스크립트가 우리 사이트 안에서 실행되어 브�
 - httpOnly 쿠키 : JavaScript가 읽을 수 없어서 XSS로 토큰을 훔칠 수 없다. 자동으로 붙어서 CSRF 위험이 있으므로 `SameSite` 설정이나 CSRF 토큰으로 막아야 한다.
 
 `src/utils/token.ts` 1~16번 줄은 access token과 refresh token을 모두 localStorage에 저장한다. 실제로 개발자 도구 Application 탭에서 두 토큰이 그대로 보였고 문의 3번을 검증할 때 값을 직접 바꿔 볼 수도 있었다. 이는 XSS 스크립트도 같은 방법으로 토큰을 읽을 수 있다는 뜻이다. 특히 refresh token은 유효시간이 1일이라 탈취되면 피해가 크다. 실제 서비스라면 refresh token은 httpOnly + `SameSite` 쿠키로 서버가 관리하고 access token은 짧게 유지하며 메모리에 두는 방식이 더 안전하다고 생각한다.
+
+
+## B-6 CORS와 CORS 오류 확인 방법
+
+출처는 프로토콜·도메인·포트를 합친 것이다. 브라우저는 동일 출처 정책 때문에 다른 출처로 보낸 요청의 응답을 기본적으로 막는다. CORS는 서버가 `Access-Control-Allow-Origin` 같은 응답 헤더로 이 출처의 요청은 허용한다고 알려 주는 방법이다. 막는 것은 브라우저이고 허용은 서버가 하기때문에 프론트 코드만 바꿔서는 해결되지 않는다.
+
+CORS 오류를 만나면 다음 순서로 확인한다.
+1. Console 오류 문구를 읽는다.
+2. Network에서 요청이 정말 다른 출처로 가는지 본다.
+3. 브라우저가 먼저 보내는 `OPTIONS` 예비 요청이 실패했는지 본다.
+4. 응답에 `Access-Control-Allow-Origin` 헤더가 있는지 본다.
+5. 쿠키를 보내는 요청이면 서버에 `Access-Control-Allow-Credentials: true`가 있고 Origin이 `*`가 아닌지 본다.
+6. 백엔드에 허용 설정을 요청하거나, 프론트 서버의 프록시로 같은 출처에서 요청하게 바꾼다.
+
+`src/apis/instance.ts` 6번 줄은 `baseURL: '/api'`라서 모든 요청이 같은 출처로 간다. MSW가 브라우저 안에서 응답하므로 CORS 오류가 생기지 않는다. 실제 마루는 같은 `/api` 요청을 `next.config.js`의 `rewrites`가 백엔드로 전달해서 CORS를 피한다.
